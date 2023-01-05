@@ -6,7 +6,7 @@ from common.gist import pull_gist, push_gist, GIST_DIR_NAME
 CHAT_FILE_NAME = 'chat.txt'
 CHAT_FILE_PATH = path.join(GIST_DIR_NAME, CHAT_FILE_NAME)
 
-BOT_NICK_NAME = 'FORGY'
+BOT_NICK_NAME = 'ONLINE BIBLE'
 CONTROLLER_NICK_NAME = 'LUKAS'
 
 
@@ -55,7 +55,7 @@ def parse_msg(line: str):
     return name, int(num), line[i+3:]
 
 
-def get_last_commands(count):
+def get_last_messages(count):
     if path.exists(CHAT_FILE_PATH):
         last_lines = check_output(
             f'grep -E "^\[.*\] \([[:digit:]]*\):" {CHAT_FILE_PATH} | tail -{count}',
@@ -67,12 +67,18 @@ def get_last_commands(count):
         exit(1)
 
 
-def add_message(msg, nick_name, reply_to=None):
+def add_message(msg, nick_name, reply_to=None, attachment=None):
     pull_gist()
     last_message_id = check_chat_file()
+    reply_str = f'[REPLY {reply_to}] ' if reply_to is not None else ''
+    attachment_str = ''
+
+    if attachment is not None:
+        attachment_str = f'[ATTACH: {attachment["name"]}] '
+        with open(path.join(GIST_DIR_NAME, attachment['name']), 'w') as f:
+            f.write(attachment['content'])
 
     with open(CHAT_FILE_PATH, 'a') as f:
-        reply_str = f'[REPLY {reply_to}] ' if reply_to is not None else ''
-        f.write(f'[{nick_name}] ({last_message_id + 1}): {reply_str}{msg}\n\n')
+        f.write(f'[{nick_name}] ({last_message_id + 1}): {reply_str}{attachment_str}{msg}\n\n')
 
     push_gist()

