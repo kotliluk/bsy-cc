@@ -6,7 +6,6 @@ from common.gist import pull_gist, push_gist, GIST_DIR_NAME
 CHAT_FILE_NAME = 'chat.txt'
 CHAT_FILE_PATH = path.join(GIST_DIR_NAME, CHAT_FILE_NAME)
 
-BOT_NICK_NAME = 'ONLINE BIBLE'
 CONTROLLER_NICK_NAME = 'LUKAS'
 
 
@@ -38,7 +37,8 @@ def check_chat_file():
 
 def parse_msg(line: str):
     line = line.strip()
-    name, num, i, name_closed, num_opened = '', '', 1, False, False
+    sender, msg_id, reply_id, attachment, name_closed, num_opened = '', '', None, None, False, False
+    i = 1
     while True:
         c = line[i]
         if c == ']':
@@ -48,20 +48,61 @@ def parse_msg(line: str):
         elif c == ')':
             break
         elif not name_closed:
-            name += c
+            sender += c
         elif num_opened:
-            num += c
+            msg_id += c
         i += 1
-    return name, int(num), line[i+3:]
+    msg = line[i+3:]
+
+    if msg.startswith('[REPLY '):
+        j = 7
+        reply_id = ''
+        while True:
+            if msg[j] == ']':
+                break
+            reply_id += msg[j]
+            j += 1
+        reply_id = int(reply_id)
+        msg = msg[j+2:]
+
+    if msg.startswith('[ATTACH: '):
+        j = 9
+        attachment = ''
+        while True:
+            if msg[j] == ']':
+                break
+            attachment += msg[j]
+            j += 1
+        msg = msg[j+2:]
+
+    return sender, int(msg_id), reply_id, attachment, msg
 
 
 def get_last_messages(count):
     if path.exists(CHAT_FILE_PATH):
-        last_lines = check_output(
-            f'grep -E "^\[.*\] \([[:digit:]]*\):" {CHAT_FILE_PATH} | tail -{count}',
-            shell=True
-        ).decode('utf-8')
+        try:
+            last_lines = check_output(
+                f'grep -E "^\[.*\] \([[:digit:]]*\):" {CHAT_FILE_PATH} | tail -{count}',
+                shell=True
+            ).decode('utf-8')
+        except Exception:
+            return []
+
         return [parse_msg(x) for x in last_lines.replace('\r\n', '\n').replace('\r', '\n').split('\n') if len(x) > 0]
+    else:
+        print('ERROR: The chat.txt file does not exist')
+        exit(1)
+
+
+def get_reply_to_msg_id(msg_id):
+    pull_gist()
+    if path.exists(CHAT_FILE_PATH):
+        try:
+            raw_msg = check_output(f'grep "): \[REPLY {msg_id}\] " {CHAT_FILE_PATH}', shell=True).decode('utf-8')
+        except Exception:
+            return None
+
+        return parse_msg(raw_msg)
     else:
         print('ERROR: The chat.txt file does not exist')
         exit(1)
@@ -69,7 +110,7 @@ def get_last_messages(count):
 
 def add_message(msg, nick_name, reply_to=None, attachment=None):
     pull_gist()
-    last_message_id = check_chat_file()
+    message_id = check_chat_file() + 1
     reply_str = f'[REPLY {reply_to}] ' if reply_to is not None else ''
     attachment_str = ''
 
@@ -79,6 +120,15 @@ def add_message(msg, nick_name, reply_to=None, attachment=None):
             f.write(attachment['content'])
 
     with open(CHAT_FILE_PATH, 'a') as f:
-        f.write(f'[{nick_name}] ({last_message_id + 1}): {reply_str}{attachment_str}{msg}\n\n')
+        f.write(f'[{nick_name}] ({message_id}): {reply_str}{attachment_str}{msg}\n\n')
 
     push_gist()
+
+    return message_id
+
+
+def read_attachment(attachment):
+    f = open(path.join(GIST_DIR_NAME, attachment), 'r')
+    text = f.read()
+    f.close()
+    return text

