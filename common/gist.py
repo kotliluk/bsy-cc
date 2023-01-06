@@ -12,16 +12,18 @@ def clone_gist():
 
 def pull_gist():
     print('Pulling Gist from Git...', flush=True)
-    call(f'cd {GIST_DIR_NAME} & git fetch & git pull')
+    call(f'cd {GIST_DIR_NAME} && git fetch')
+    call(f'cd {GIST_DIR_NAME} && git pull')
 
 
 def push_gist():
     print('Pushing Gist to Git...', flush=True)
-    call(f'cd {GIST_DIR_NAME} & git add . & git commit -m "msg" & git push')
+    call(f'cd {GIST_DIR_NAME} && git add . && git commit -m "msg" && git push')
 
 
 def init_gist():
     print('Cloning Gist from Git...', flush=True)
     call(f'git submodule add --force {GIST_URL}')
     print('Updating Gist from Git...', flush=True)
-    call(f'cd {GIST_DIR_NAME} & git fetch & git pull')
+    call(f'cd {GIST_DIR_NAME} && git fetch')
+    call(f'cd {GIST_DIR_NAME} && git pull')
