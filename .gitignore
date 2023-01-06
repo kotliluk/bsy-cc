@@ -129,8 +129,8 @@ dmypy.json
 .pyre/
 
 # Nested GISTs
-# bot/ff1d1749b91389cc1f0fdb5c6d7ec580/
-# controller/ff1d1749b91389cc1f0fdb5c6d7ec580/
+bot/ff1d1749b91389cc1f0fdb5c6d7ec580/
+controller/ff1d1749b91389cc1f0fdb5c6d7ec580/
 .gitmodules
 
 # IDE
