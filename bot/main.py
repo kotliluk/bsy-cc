@@ -6,7 +6,7 @@ from subprocess import check_output
 from os import path
 
 sys.path.append('..')
-from common.utils import add_message, check_chat_file, get_last_messages, replace_newlines_with_spaces, read_attachment
+from common.utils import add_message, check_chat_file, get_last_messages, read_attachment
 from common.utils import CONTROLLER_NICK_NAME
 from common.gist import pull_gist, init_gist
 from common.chapters import get_command_for_chapter, read_chapter
@@ -25,7 +25,7 @@ def process_who():
 
 def process_ls(dir_path):
     if path.exists(dir_path):
-        return replace_newlines_with_spaces(check_output(f'ls {dir_path}', shell=True).decode('utf-8').strip())
+        return check_output(f'ls {dir_path}', shell=True).decode('utf-8').strip()
     return 'Directory does not exist'
 
 
@@ -44,10 +44,10 @@ def process_cp(file_path):
 def process_exec(file_path):
     if path.exists(file_path):
         try:
-            return replace_newlines_with_spaces(check_output(file_path, shell=True).decode('utf-8').strip())
+            return check_output(file_path, shell=True).decode('utf-8').strip()
         except Exception:
             try:
-                return replace_newlines_with_spaces(check_output(f'sh {file_path}', shell=True).decode('utf-8').strip())
+                return check_output(f'sh {file_path}', shell=True).decode('utf-8').strip()
             except Exception:
                 return 'File cannot be run'
     return 'File does not exist'

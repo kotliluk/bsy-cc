@@ -9,10 +9,6 @@ CHAT_FILE_PATH = path.join(GIST_DIR_NAME, CHAT_FILE_NAME)
 CONTROLLER_NICK_NAME = 'LUKAS'
 
 
-def replace_newlines_with_spaces(txt):
-    return txt.replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
-
-
 def get_message_id_from_line(line):
     num_str = ''
     open_found = False
