@@ -9,7 +9,6 @@ from common.chapters import get_chapter_for_path_encoding, get_chapter_for_comma
 from common.steganography import encode_to_text, decode_from_text
 
 
-# TODO - check maximum sizes of encoded messages
 # TODO - heartbeat
 
 def encode_path(pth):
@@ -44,14 +43,15 @@ def process_cmd(cmd):
     elif len(cmd_parts) == 2 and cmd_parts[0] == 'decode' and cmd_parts[1].isdigit():
         msg_id = int(cmd_parts[1])
         print(f'Decoding reply for message {msg_id}...')
-        reply = get_reply_to_msg_id(msg_id)
-        if reply is None:
+        replies = get_reply_to_msg_id(msg_id)
+        if len(replies) == 0:
             print(f'No reply for message {msg_id} found', flush=True)
         else:
-            text = read_attachment(reply[3])
-            decoded = decode_from_text(text)
-            print(f'Reply for message {msg_id}:')
-            print(decoded, flush=True)
+            for reply in replies:
+                text = read_attachment(reply[3])
+                decoded = decode_from_text(text)
+                print(f'Reply for message {msg_id} by {reply[0]}:')
+                print(decoded, flush=True)
 
     else:
         print(f'Unknown command: {cmd}', flush=True)
@@ -61,7 +61,7 @@ def run():
     print('Controller is starting...')
     init_gist()
     check_chat_file()
-    print('Controller is running...')
+    print(f'Controller is running as {CONTROLLER_NICK_NAME}...')
 
     while True:
         cmd = input('BSY CC > ')

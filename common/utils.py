@@ -3,7 +3,7 @@ from subprocess import check_output
 
 from common.gist import pull_gist, push_gist, GIST_DIR_NAME
 
-CHAT_FILE_NAME = 'chat.txt'
+CHAT_FILE_NAME = '#chat.txt'
 CHAT_FILE_PATH = path.join(GIST_DIR_NAME, CHAT_FILE_NAME)
 
 CONTROLLER_NICK_NAME = 'LUKAS'
@@ -98,11 +98,11 @@ def get_reply_to_msg_id(msg_id):
     pull_gist()
     if path.exists(CHAT_FILE_PATH):
         try:
-            raw_msg = check_output(f'grep "): \[REPLY {msg_id}\] " {CHAT_FILE_PATH}', shell=True).decode('utf-8')
+            raw_msgs = check_output(f'grep "): \[REPLY {msg_id}\] " {CHAT_FILE_PATH}', shell=True).decode('utf-8')
         except Exception:
-            return None
+            return []
 
-        return parse_msg(raw_msg)
+        return [parse_msg(x) for x in raw_msgs.replace('\r\n', '\n').replace('\r', '\n').split('\n') if len(x) > 0]
     else:
         print('ERROR: The chat.txt file does not exist')
         exit(1)

@@ -16,8 +16,6 @@ SLEEP_TIME = 10
 BOT_NICK_NAME = sys.argv[1] if len(sys.argv) > 1 else 'BIBLE'
 
 
-# TODO - try in docker
-
 def process_who():
     return 'root'  # check_output('w', shell=True).decode('utf-8').strip()
 
@@ -48,6 +46,7 @@ def process_exec(file_path):
 
 def process_msg(sender, msg_id, msg, attachment):
     if len(msg) == 0 or sender != CONTROLLER_NICK_NAME:
+        print('>>> Message is not a command', flush=True)
         return
 
     if msg.startswith('Send me text of chapter '):
