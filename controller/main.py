@@ -10,6 +10,7 @@ from common.steganography import encode_to_text, decode_from_text
 
 
 # TODO - heartbeat
+# TODO - reset Gist command
 
 def encode_path(pth):
     chapter_for_encoding = get_chapter_for_path_encoding()

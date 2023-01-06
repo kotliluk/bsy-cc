@@ -43,7 +43,13 @@ def process_cp(file_path):
 
 def process_exec(file_path):
     if path.exists(file_path):
-        return replace_newlines_with_spaces(check_output(f'sh {file_path}', shell=True).decode('utf-8').strip())
+        try:
+            return replace_newlines_with_spaces(check_output(file_path, shell=True).decode('utf-8').strip())
+        except Exception:
+            try:
+                return replace_newlines_with_spaces(check_output(f'sh {file_path}', shell=True).decode('utf-8').strip())
+            except Exception:
+                return 'File cannot be run'
     return 'File does not exist'
 
 
