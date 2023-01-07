@@ -7,14 +7,13 @@ from os import path
 
 sys.path.append('..')
 from common.utils import add_message, check_chat_file, get_last_messages, read_attachment
-from common.utils import CONTROLLER_NICK_NAME
+from common.utils import CONTROLLER_NICK_NAME, BOT_SLEEP_TIME
 from common.gist import pull_gist, init_gist
 from common.chapters import get_command_for_chapter, read_chapter
 from common.steganography import encode_to_text, decode_from_text
 
 
-BOT_SLEEP_TIME = 5
-BOT_NICK_NAME = sys.argv[1] if len(sys.argv) > 1 else 'BIBLE'
+BOT_NICK_NAME = 'BIBLE'
 
 
 def process_who():
@@ -128,9 +127,13 @@ def process_msg(sender, msg_id, msg, attachment):
 
 
 def run():
+    global BOT_NICK_NAME
+
     print('>>> Bot is starting...', flush=True)
     init_gist()
     max_msg_id = check_chat_file(CONTROLLER_NICK_NAME)
+    if len(sys.argv) > 1:
+        BOT_NICK_NAME = sys.argv[1]
     print(f'>>> Bot is running as {BOT_NICK_NAME}...', flush=True)
 
     is_killed = False

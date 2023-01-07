@@ -4,6 +4,7 @@ from common.gist import pull_gist, push_gist, GIST_DIR_NAME
 
 CHAT_FILE_PREFIX = path.join(GIST_DIR_NAME, '#CHAT')
 
+BOT_SLEEP_TIME = 5
 CONTROLLER_NICK_NAME = 'MAIN'
 
 

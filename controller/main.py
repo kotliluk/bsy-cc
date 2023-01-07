@@ -4,11 +4,9 @@ from datetime import datetime
 from pytimedinput import timedInput
 from time import sleep
 
-from bot.main import BOT_SLEEP_TIME
-
 sys.path.append('..')
 from common.utils import add_message, get_replies_to_msg_id, read_attachment, reset_gist
-from common.utils import CONTROLLER_NICK_NAME
+from common.utils import CONTROLLER_NICK_NAME, BOT_SLEEP_TIME
 from common.gist import init_gist
 from common.chapters import get_chapter_for_path_encoding, get_chapter_for_command, read_chapter
 from common.steganography import encode_to_text, decode_from_text
