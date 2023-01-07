@@ -1,4 +1,4 @@
-from os import path
+from os import path, getcwd, unlink, listdir
 from subprocess import check_output
 
 from common.gist import pull_gist, push_gist, GIST_DIR_NAME
@@ -92,7 +92,6 @@ def get_last_messages(count):
 
 def get_replies_to_msg_id(msg_id):
     pull_gist()
-    print(flush=True)
 
     if path.exists(CHAT_FILE_PATH):
         try:
@@ -108,7 +107,6 @@ def get_replies_to_msg_id(msg_id):
 
 def add_message(msg, nick_name, reply_to=None, attachment=None):
     pull_gist()
-    print(flush=True)
     message_id = check_chat_file() + 1
     reply_str = f'[REPLY {reply_to}] ' if reply_to is not None else ''
     attachment_str = ''
@@ -122,7 +120,6 @@ def add_message(msg, nick_name, reply_to=None, attachment=None):
         f.write(f'[{nick_name}] ({message_id}): {reply_str}{attachment_str}{msg}\n\n')
 
     push_gist()
-    print(flush=True)
 
     return message_id
 
@@ -132,3 +129,22 @@ def read_attachment(attachment):
     text = f.read()
     f.close()
     return text
+
+
+def reset_gist():
+    pull_gist()
+
+    folder = path.join(getcwd(), GIST_DIR_NAME)
+    for filename in listdir(folder):
+        if filename == '.git':
+            continue
+
+        try:
+            unlink(path.join(folder, filename))
+        except Exception:
+            pass
+
+    with open(CHAT_FILE_PATH, 'w') as f:
+        f.write(f'[INIT] (1): Welcome to the online Bible bot, ask anything about the Bible!\n\n')
+
+    push_gist()
