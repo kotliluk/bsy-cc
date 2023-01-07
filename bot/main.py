@@ -131,6 +131,10 @@ def run():
         pull_gist()
         new_max_msg_id = check_chat_file()
 
+        if new_max_msg_id < max_msg_id:
+            print(f'>>> Gist was reset...', flush=True)
+            max_msg_id = 1
+
         if new_max_msg_id > max_msg_id:
             count = new_max_msg_id - max_msg_id
             print(f'>>> Processing {count} new messages...', flush=True)

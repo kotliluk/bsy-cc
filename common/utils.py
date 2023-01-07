@@ -1,5 +1,4 @@
 from os import path, getcwd, unlink, listdir
-from subprocess import check_output
 
 from common.gist import pull_gist, push_gist, GIST_DIR_NAME
 
@@ -7,28 +6,6 @@ CHAT_FILE_NAME = '#chat.txt'
 CHAT_FILE_PATH = path.join(GIST_DIR_NAME, CHAT_FILE_NAME)
 
 CONTROLLER_NICK_NAME = 'LUKAS'
-
-
-def get_message_id_from_line(line):
-    num_str = ''
-    open_found = False
-    for c in line:
-        if c == '(':
-            open_found = True
-        elif c == ')':
-            break
-        elif open_found:
-            num_str += c
-    return int(num_str)
-
-
-def check_chat_file():
-    if path.exists(CHAT_FILE_PATH):
-        last_message_line = check_output(f'grep -E "^\[.*\] \([[:digit:]]*\):" {CHAT_FILE_PATH} | tail -1', shell=True)
-        return get_message_id_from_line(last_message_line.decode('utf-8').strip())
-    else:
-        print('ERROR: The chat.txt file does not exist')
-        exit(1)
 
 
 def parse_msg(line: str):
@@ -76,30 +53,27 @@ def parse_msg(line: str):
 
 def get_last_messages(count):
     if path.exists(CHAT_FILE_PATH):
-        try:
-            last_lines = check_output(
-                f'grep -E "^\[.*\] \([[:digit:]]*\):" {CHAT_FILE_PATH} | tail -{count}',
-                shell=True
-            ).decode('utf-8')
-        except Exception:
-            return []
-
-        return [parse_msg(x) for x in last_lines.replace('\r\n', '\n').replace('\r', '\n').split('\n') if len(x) > 0]
+        with open(CHAT_FILE_PATH, 'r') as f:
+            lines = [line.strip() for line in f.readlines() if len(line) > 0]
+            last_lines = [line for line in lines if len(line) > 0][-count:]
+            return [parse_msg(x) for x in last_lines]
     else:
         print('ERROR: The chat.txt file does not exist')
         exit(1)
+
+
+def check_chat_file():
+    return get_last_messages(1)[0][1]
 
 
 def get_replies_to_msg_id(msg_id):
     pull_gist()
 
     if path.exists(CHAT_FILE_PATH):
-        try:
-            raw_msgs = check_output(f'grep "): \[REPLY {msg_id}\] " {CHAT_FILE_PATH}', shell=True).decode('utf-8')
-        except Exception:
-            return []
-
-        return [parse_msg(x) for x in raw_msgs.replace('\r\n', '\n').replace('\r', '\n').split('\n') if len(x) > 0]
+        with open(CHAT_FILE_PATH, 'r') as f:
+            lines = [line.strip() for line in f.readlines() if len(line) > 0]
+            replies = [line for line in lines if line.find(f'): [REPLY {msg_id}] ') > -1]
+            return [parse_msg(reply) for reply in replies]
     else:
         print('ERROR: The chat.txt file does not exist')
         exit(1)
@@ -148,3 +122,6 @@ def reset_gist():
         f.write(f'[INIT] (1): Welcome to the online Bible bot, ask anything about the Bible!\n\n')
 
     push_gist()
+
+
+get_last_messages(5)

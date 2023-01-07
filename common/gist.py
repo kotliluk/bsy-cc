@@ -15,8 +15,8 @@ def push_gist():
     r = call(f'cd {GIST_DIR_NAME} && git add . && git commit -m "msg" -q && git push -q')
 
     while r != 0:
-        # retry in case of parallel git process
-        sleep(2)
+        print('Please wait, retrying to push to git...')
+        sleep(1)
         r = call(f'cd {GIST_DIR_NAME} && git push -q')
 
 
