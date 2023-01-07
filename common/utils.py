@@ -134,6 +134,6 @@ def reset_gist():
             pass
 
     with open(get_user_file(CONTROLLER_NICK_NAME), 'w') as f:
-        f.write(f'[INIT] (1): Welcome to the online Bible bot, ask anything about the Bible!\n\n')
+        f.write(f'(1): Welcome to the online Bible bot, ask anything about the Bible!\n\n')
 
     push_gist()
