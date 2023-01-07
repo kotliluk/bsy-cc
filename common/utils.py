@@ -90,8 +90,10 @@ def get_last_messages(count):
         exit(1)
 
 
-def get_reply_to_msg_id(msg_id):
+def get_replies_to_msg_id(msg_id):
     pull_gist()
+    print(flush=True)
+
     if path.exists(CHAT_FILE_PATH):
         try:
             raw_msgs = check_output(f'grep "): \[REPLY {msg_id}\] " {CHAT_FILE_PATH}', shell=True).decode('utf-8')
@@ -106,6 +108,7 @@ def get_reply_to_msg_id(msg_id):
 
 def add_message(msg, nick_name, reply_to=None, attachment=None):
     pull_gist()
+    print(flush=True)
     message_id = check_chat_file() + 1
     reply_str = f'[REPLY {reply_to}] ' if reply_to is not None else ''
     attachment_str = ''
@@ -119,6 +122,7 @@ def add_message(msg, nick_name, reply_to=None, attachment=None):
         f.write(f'[{nick_name}] ({message_id}): {reply_str}{attachment_str}{msg}\n\n')
 
     push_gist()
+    print(flush=True)
 
     return message_id
 

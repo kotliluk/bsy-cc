@@ -4,3 +4,6 @@
 [submodule "bot/ff1d1749b91389cc1f0fdb5c6d7ec580"]
 	path = bot/ff1d1749b91389cc1f0fdb5c6d7ec580
 	url = https://gist.github.com/ff1d1749b91389cc1f0fdb5c6d7ec580.git
+[submodule "controller/-q"]
+	path = controller/-q
+	url = https://gist.github.com/ff1d1749b91389cc1f0fdb5c6d7ec580.git

