@@ -80,13 +80,11 @@ def get_replies_to_msg_id(msg_id, user):
 
     folder = path.join(getcwd(), GIST_DIR_NAME)
     for filename in listdir(folder):
-        print('filename', filename, flush=True)
         if not filename.startswith('#CHAT') or filename == get_user_file(CONTROLLER_NICK_NAME):
             continue
 
         with open(path.join(folder, filename), 'r') as f:
             lines = [line.strip() for line in f.readlines() if len(line) > 0]
-            print('lines', lines)
             replies = [line for line in lines if line.find(f'): [REPLY {msg_id} {user}] ') > -1]
             all_replies += [parse_msg(reply, get_user_from_chat_name(filename)) for reply in replies]
 
