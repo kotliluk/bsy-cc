@@ -6,7 +6,7 @@ GIST_DIR_NAME = 'ff1d1749b91389cc1f0fdb5c6d7ec580'
 
 
 def pull_gist():
-    call(f'cd {GIST_DIR_NAME} && git pull -q')
+    call(f'cd {GIST_DIR_NAME} && git pull -q --no-edit')
 
 
 def push_gist():
