@@ -35,7 +35,7 @@ def check_heartbeat():
 
     replies = get_replies_to_msg_id(msg_id)
     bot_names = list(map(lambda x: x[0], replies))
-    bot_names_str = f' ({"".join(bot_names)})' if len(bot_names) > 0 else ''
+    bot_names_str = f' ({", ".join(bot_names)})' if len(bot_names) > 0 else ''
     print(f'Active bots ({now}): {len(bot_names)}{bot_names_str}', flush=True)
 
 
